@@ -1,7 +1,7 @@
 import {connection} from "../database/database.js";
 
 export async function postGamesMD(req, res, next) {
-    const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
+    const { name, stockTotal, categoryId, pricePerDay } = req.body;
     
     try {
         const game = await connection.query(`SELECT * FROM games WHERE name=$1;`, [name]);

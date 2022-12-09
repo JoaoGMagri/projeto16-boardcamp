@@ -26,8 +26,8 @@ export async function getGames(req, res){
                 '${name}%';`
             );
         } else {
-            games = await connection.query(
-                `SELECT 
+            games = await connection.query(`
+            SELECT 
                 games.id,
                 games.name,
                 games.image,
