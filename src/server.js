@@ -30,8 +30,8 @@ app.post("/categories", async (req, res) => {
 
     try {
 
-        const categories = await connection.query("SELECT $1 FROM categories;", [name]);
-        if(categories){
+        const categories = await connection.query("SELECT * FROM categories WHERE name=$1;`", [name]);
+        if(categories.rows){
             res.sendStatus(409);
             return;
         }
@@ -44,7 +44,69 @@ app.post("/categories", async (req, res) => {
     } catch (error) {
         res.sendStatus(500);
     }
-})
+});
+
+app.get("/games", async (req, res) => {
+
+    const { name } = req.query;
+    let games;
+    
+    try {
+        if(name){
+            games = await connection.query(`SELECT * FROM games WHERE name ILIKE '${name}%';`);
+        } else {
+            games = await connection.query("SELECT * FROM games;");
+        }
+        res.send(games.rows);
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+
+});
+app.post("/games", async (req, res) => {
+    const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
+
+    try {
+        
+        const game = await connection.query(`SELECT * FROM games WHERE name=$1;`, [name]);
+        if( game.rowCount !== 0 ){
+            res.sendStatus(409);
+            return;
+        }
+        
+        const categoriesID = await connection.query("SELECT * FROM categories WHERE id=$1;", [categoryId]);
+        console.log(categoriesID.rowCount);
+        if(categoriesID.rowCount === 0){
+            res.sendStatus(400);
+            return;
+        }
+
+
+        if(!name){
+            res.sendStatus(400);
+            return;
+        }
+        if(stockTotal <= 0){
+            res.sendStatus(400);
+            return;
+        }
+        if(pricePerDay <= 0){
+            res.sendStatus(400);
+            return;
+        }
+
+        await connection.query(
+            `INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5);`,
+            [name, image, stockTotal, categoryId, pricePerDay]
+        );
+        res.sendStatus(201);
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+
+});
 
 const port = 4000;
 app.listen(port, () => {
