@@ -30,8 +30,8 @@ app.post("/categories", async (req, res) => {
 
     try {
 
-        const categories = await connection.query("SELECT * FROM categories WHERE name=$1;`", [name]);
-        if(categories.rows){
+        const categories = await connection.query("SELECT * FROM categories WHERE name=$1;", [name]);
+        if (categories.rowCount !== 0) {
             res.sendStatus(409);
             return;
         }
@@ -42,6 +42,7 @@ app.post("/categories", async (req, res) => {
         );
         res.sendStatus(201);
     } catch (error) {
+        console.log(error);
         res.sendStatus(500);
     }
 });
@@ -50,13 +51,27 @@ app.get("/games", async (req, res) => {
 
     const { name } = req.query;
     let games;
-    
+
     try {
-        if(name){
-            games = await connection.query(`SELECT * FROM games WHERE name ILIKE '${name}%';`);
+        if (name) {
+            games = await connection.query(`SELECT * FROM games JOIN categories ON games.categoryId=$1 WHERE name ILIKE '${name}%';`, [categories.id]);
         } else {
-            games = await connection.query("SELECT * FROM games;");
+            games = await connection.query(
+            `SELECT 
+                games.id,
+                games.name,
+                games.image,
+                games."stockTotal",
+                games."pricePerDay",
+                categories.name AS "categoryName"
+            FROM 
+                games 
+            JOIN 
+                categories 
+            ON 
+                games."categoryId"=categories.id;`);
         }
+        console.log(games);
         res.send(games.rows);
     } catch (error) {
         console.log(error);
@@ -68,30 +83,29 @@ app.post("/games", async (req, res) => {
     const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
 
     try {
-        
+
         const game = await connection.query(`SELECT * FROM games WHERE name=$1;`, [name]);
-        if( game.rowCount !== 0 ){
+        if (game.rowCount !== 0) {
             res.sendStatus(409);
             return;
         }
-        
+
         const categoriesID = await connection.query("SELECT * FROM categories WHERE id=$1;", [categoryId]);
-        console.log(categoriesID.rowCount);
-        if(categoriesID.rowCount === 0){
+        if (categoriesID.rowCount === 0) {
             res.sendStatus(400);
             return;
         }
 
 
-        if(!name){
+        if (!name) {
             res.sendStatus(400);
             return;
         }
-        if(stockTotal <= 0){
+        if (stockTotal <= 0) {
             res.sendStatus(400);
             return;
         }
-        if(pricePerDay <= 0){
+        if (pricePerDay <= 0) {
             res.sendStatus(400);
             return;
         }
