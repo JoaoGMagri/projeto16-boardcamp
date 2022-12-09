@@ -2,110 +2,21 @@ import express from 'express';
 import cors from 'cors';
 import joi from 'joi';
 
-import categories from "./routers/categories.routers.js"
+import categories from "./routers/categories.routers.js";
+import games from "./routers/games.routers.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(categories);
+app.use(games);
 
 
 
 
 
 
-app.get("/games", async (req, res) => {
 
-    const { name } = req.query;
-    let games;
-
-    try {
-        if (name) {
-            games = await connection.query(`
-            SELECT 
-                games.id,
-                games.name,
-                games.image,
-                games."stockTotal",
-                games."pricePerDay",
-                categories.name AS "categoryName"
-            FROM 
-                games 
-            JOIN 
-                categories 
-            ON 
-                games."categoryId"=categories.id 
-            WHERE 
-                games.name 
-            ILIKE 
-                '${name}%';`
-            );
-        } else {
-            games = await connection.query(
-                `SELECT 
-                games.id,
-                games.name,
-                games.image,
-                games."stockTotal",
-                games."pricePerDay",
-                categories.name AS "categoryName"
-            FROM 
-                games 
-            JOIN 
-                categories 
-            ON 
-                games."categoryId"=categories.id;`
-            );
-        }
-        res.send(games.rows);
-    } catch (error) {
-        console.log(error);
-        res.sendStatus(500);
-    }
-
-});
-app.post("/games", async (req, res) => {
-    const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
-
-    try {
-
-        const game = await connection.query(`SELECT * FROM games WHERE name=$1;`, [name]);
-        if (game.rowCount !== 0) {
-            res.sendStatus(409);
-            return;
-        }
-
-        const categoriesID = await connection.query("SELECT * FROM categories WHERE id=$1;", [categoryId]);
-        if (categoriesID.rowCount === 0) {
-            res.sendStatus(400);
-            return;
-        }
-
-
-        if (!name) {
-            res.sendStatus(400);
-            return;
-        }
-        if (stockTotal <= 0) {
-            res.sendStatus(400);
-            return;
-        }
-        if (pricePerDay <= 0) {
-            res.sendStatus(400);
-            return;
-        }
-
-        await connection.query(
-            `INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5);`,
-            [name, image, stockTotal, categoryId, pricePerDay]
-        );
-        res.sendStatus(201);
-    } catch (error) {
-        console.log(error);
-        res.sendStatus(500);
-    }
-
-});
 
 app.get("/customers", async (req, res) => {
 
