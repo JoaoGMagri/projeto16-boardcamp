@@ -8,11 +8,7 @@ export async function getGames(req, res){
         if (name) {
             games = await connection.query(`
             SELECT 
-                games.id,
-                games.name,
-                games.image,
-                games."stockTotal",
-                games."pricePerDay",
+                games.*,
                 categories.name AS "categoryName"
             FROM 
                 games 
@@ -28,11 +24,7 @@ export async function getGames(req, res){
         } else {
             games = await connection.query(`
             SELECT 
-                games.id,
-                games.name,
-                games.image,
-                games."stockTotal",
-                games."pricePerDay",
+                games.*,
                 categories.name AS "categoryName"
             FROM 
                 games 
