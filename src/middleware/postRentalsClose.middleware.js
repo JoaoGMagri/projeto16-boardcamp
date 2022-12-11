@@ -23,7 +23,7 @@ export async function postRentalsCloseMD(req, res, next){
             res.sendStatus(400);
             return;
         }
-        const now = new Date("2022-12-13");
+        const now = new Date();
         const past = new Date(rentals.rows[0].rentDate);
         const diff = Math.abs(now.getTime() - past.getTime());
         let days = Math.ceil(diff / (1000 * 60 * 60 * 24));
