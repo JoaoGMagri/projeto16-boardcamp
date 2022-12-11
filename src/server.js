@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import joi from 'joi';
 
 import categories from "./routers/categories.routers.js";
 import games from "./routers/games.routers.js";

@@ -23,11 +23,12 @@ export async function postRentalsCloseMD(req, res, next){
             res.sendStatus(400);
             return;
         }
-        const now = new Date();
+        const now = new Date("2022-12-13");
         const past = new Date(rentals.rows[0].rentDate);
         const diff = Math.abs(now.getTime() - past.getTime());
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
+        let days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        days = days - rentals.rows[0].daysRented;
+        
         const games = await connection.query(`
             SELECT 
                 *
@@ -38,7 +39,8 @@ export async function postRentalsCloseMD(req, res, next){
             `,
             [rentals.rows[0].gameId]
         );
-        if(days > 1){
+        console.log(days);
+        if(days > 0){
             delayFee = days * games.rows[0].pricePerDay;
         }
         
