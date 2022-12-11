@@ -106,63 +106,9 @@ export async function getRentals(req, res) {
     }
 }
 export async function postRentalsOpen(req, res) {
-    const { customerId, gameId, daysRented } = req.body;
-    const rendDate= dayjs().format("YYYY-MM-DD");
+    const {customerId, gameId, rendDate, daysRented,originalPrice} = req.obj;
 
     try {
-
-        if(daysRented <= 0){
-            res.sendStatus(400);
-            return;
-        }
-
-        const customers = await connection.query(`
-            SELECT 
-                *
-            FROM 
-                customers 
-            WHERE 
-                id=$1;
-            `,
-            [customerId]
-        );
-        if(customers.rowCount === 0){
-            res.sendStatus(400);
-            return;
-        }
-        
-        const games = await connection.query(`
-            SELECT 
-                *
-            FROM 
-                games 
-            WHERE 
-                id=$1;
-            `,
-            [gameId]
-        );
-        if(games.rowCount === 0){
-            res.sendStatus(400);
-            return;
-        }
-
-        const rentals = await connection.query(`
-            SELECT 
-                *
-            FROM 
-                rentals 
-            WHERE 
-                "gameId"=$1;
-            `,
-            [gameId]
-        );
-        const stock = games.rows[0].stockTotal - rentals.rowCount;
-        if(stock <= 0){
-            res.sendStatus(400);
-            return;
-        }
-
-        const originalPrice = games.rows[0].pricePerDay + Number(daysRented);
 
         await connection.query(`
         INSERT INTO rentals (
@@ -186,16 +132,23 @@ export async function postRentalsOpen(req, res) {
     }
 
 }
-
-
-export async function postCustomers(req, res) {
-    const { name, phone, cpf, birthday } = req.body;
+export async function postRentalsClose(req, res) {
+    const {now, delayFee, id} = req.obj;
 
     try {
-        await connection.query(
-            `INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);`,
-            [name, phone, cpf, birthday]
+
+        await connection.query(`
+            UPDATE 
+                rentals
+            SET 
+                "returnDate"=$1, 
+                "delayFee"=$2
+            WHERE
+                id=$3
+            ;`,
+            [now, delayFee, id]
         );
+
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -203,23 +156,16 @@ export async function postCustomers(req, res) {
     }
 
 }
-export async function putCustomers(req, res) {
-    const { name, phone, cpf, birthday } = req.body;
+export async function deleteRentals(req, res) {
     const { id } = req.params;
-
     try {
-        await connection.query(
-            `UPDATE 
-                customers
-            SET 
-                name=$1, 
-                phone=$2, 
-                cpf=$3, 
-                birthday=$4
+        await connection.query(`
+            DELETE FROM
+                rentals
             WHERE
-                id=$5
+                id=$1
             ;`,
-            [name, phone, cpf, birthday, id]
+            [id]
         );
         res.sendStatus(201);
     } catch (error) {
