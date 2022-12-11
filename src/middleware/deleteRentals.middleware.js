@@ -1,6 +1,6 @@
 import { connection } from "../database/database.js";
 
-export async function postRentalsCloseMD(req, res, next) {
+export async function deleteRentalsMD(req, res, next) {
     const { id } = req.params;
 
     try {
